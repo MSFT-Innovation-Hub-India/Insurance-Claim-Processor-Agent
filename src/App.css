@@ -1,0 +1,87 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f3f5f9;
+  color: #1f2937;
+}
+
+.container {
+  max-width: 640px;
+  margin: 48px auto;
+  padding: 0 16px;
+}
+
+h1 {
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  margin-top: 0;
+  color: #6b7280;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.label {
+  font-weight: 600;
+}
+
+.preview {
+  margin: 0;
+}
+
+.preview img {
+  max-width: 100%;
+  max-height: 320px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+}
+
+.preview figcaption {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+button {
+  align-self: flex-start;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 4px;
+  background: #0f6cbd;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.message {
+  margin: 0;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.success {
+  background: #e7f5ea;
+  color: #1e6b33;
+}
+
+.error {
+  background: #fdecea;
+  color: #a4262c;
+}

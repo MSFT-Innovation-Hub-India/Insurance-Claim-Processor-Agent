@@ -91,6 +91,10 @@ flowchart LR
 **UI** ([`src/App.jsx`](src/App.jsx)):
 
 - file picker restricted to `.png`, with an image preview;
+- **sample claim form preselected:** on load the UI fetches [`data/PolicyClaim-21.png`](data/PolicyClaim-21.png)
+  (served by the app at `/PolicyClaim-21.png`) and selects it, marked with a **Sample** badge. A demo
+  works from any device just by clicking **Submit**. Choosing a file replaces the sample, and a
+  **Use the sample claim form** link switches back. After a successful submit the form resets to the sample;
 - **Submit** reads the file as base64 and POSTs it to `/api/claims`;
 - shows a success message with the Logic App **run ID**, or an error.
 
@@ -113,11 +117,11 @@ Locally these come from `.env` (loaded with Node's `process.loadEnvFile`). In Az
 
 ```
 .
-├── data/PolicyClaim-21.png   # sample claim form for testing
+├── data/PolicyClaim-21.png   # sample claim form; Vite publicDir, so it's bundled and served at /PolicyClaim-21.png
 ├── server/index.js           # Express API + static file host
 ├── src/                      # React UI (main.jsx, App.jsx, App.css)
 ├── index.html                # Vite entry
-├── vite.config.js            # dev server on :5173, proxies /api -> :3001
+├── vite.config.js            # dev server on :5173, proxies /api -> :3001, publicDir = data/
 ├── Dockerfile / .dockerignore
 └── .env.example              # template for local configuration
 ```
@@ -228,7 +232,7 @@ npm run dev
 - UI: <http://localhost:5173> (Vite dev server with hot reload; proxies `/api` to the Express server)
 - API: <http://localhost:3001>
 
-Open the UI, pick [`data/PolicyClaim-21.png`](data/PolicyClaim-21.png) and click **Submit**.
+Open the UI. The sample claim form is already selected, so just click **Submit**, or choose your own `.png` first.
 
 **Production-like local run** (single process, serves the built UI):
 
@@ -262,21 +266,23 @@ Set some variables first:
 $rg   = "pcdotai-agent"
 $acr  = "pcdotaiagentd10b5a"
 $app  = "insurance-claim-processor"
-$tag  = "v1"
-$env:PYTHONUTF8 = 1   # stops az acr build crashing on non-ASCII log output on Windows consoles
+$tag  = "v2"          # use a new tag for every release
 ```
 
 ### 1. Build the image remotely in ACR
 
 Run from the project root. The build context is uploaded, and `.dockerignore` keeps out `.env`,
-`node_modules` and `data/`.
+`node_modules` and local build output. `data/` is included because the sample claim form is bundled into the UI.
 
 ```powershell
-az acr build -r $acr -g $rg -t "${app}:$tag" -t "${app}:latest" --platform linux/amd64 .
+az acr build -r $acr -g $rg -t "${app}:$tag" -t "${app}:latest" --platform linux/amd64 --no-logs .
+az acr task list-runs -r $acr --top 1 -o table   # wait until STATUS is Succeeded
 ```
 
-If log streaming fails locally, the build still continues in ACR. Check it with
-`az acr task list-runs -r $acr --top 1 -o table`.
+> **Why `--no-logs`:** on Windows consoles, `az acr build` can crash with
+> `'charmap' codec can't encode character` while streaming the build log, although the build itself
+> continues in ACR. `--no-logs` just queues the build. To view the log afterwards, run
+> `az acr task logs -r $acr --run-id <run id>`. On Linux/macOS you can drop `--no-logs`.
 
 ### 2a. First-time deployment: create the container app
 
@@ -311,8 +317,8 @@ az containerapp show -g $rg -n $app --query "{fqdn:properties.configuration.ingr
 az containerapp revision list -g $rg -n $app -o table
 ```
 
-Browse to the FQDN, submit the sample PNG, and check that a new **Succeeded** run appears in the
-Logic App run history.
+Browse to the FQDN, click **Submit** (the sample claim form is preselected), and check that a new
+**Succeeded** run appears in the Logic App run history.
 
 ---
 

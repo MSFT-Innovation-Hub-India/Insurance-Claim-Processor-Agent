@@ -70,6 +70,41 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: #eef4fb;
+  color: #1f3b57;
+  font-size: 0.9rem;
+}
+
+.link-button {
+  align-self: auto;
+  padding: 0;
+  background: none;
+  color: #0f6cbd;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
+.link-button:disabled {
+  background: none;
+  color: #9ca3af;
+}
+
+.badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #0f6cbd;
+  color: #fff;
+  font-size: 0.75rem;
+}
+
 .message {
   margin: 0;
   padding: 12px;

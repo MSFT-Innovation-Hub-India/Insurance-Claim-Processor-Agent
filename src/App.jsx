@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+const SAMPLE_NAME = 'PolicyClaim-21.png';
+const SAMPLE_URL = `/${SAMPLE_NAME}`;
 
 function readAsBase64(file) {
   return new Promise((resolve, reject) => {
@@ -13,7 +16,30 @@ export default function App() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [status, setStatus] = useState({ type: 'idle' });
+  const [sampleAvailable, setSampleAvailable] = useState(true);
+  const [isSample, setIsSample] = useState(false);
   const inputRef = useRef(null);
+  const sampleRef = useRef(null);
+
+  const selectSample = useCallback(async () => {
+    try {
+      if (!sampleRef.current) {
+        const response = await fetch(SAMPLE_URL);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        sampleRef.current = new File([blob], SAMPLE_NAME, { type: 'image/png' });
+      }
+      setFile(sampleRef.current);
+      setIsSample(true);
+      if (inputRef.current) inputRef.current.value = '';
+    } catch {
+      setSampleAvailable(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    selectSample();
+  }, [selectSample]);
 
   useEffect(() => {
     if (!file) {
@@ -27,14 +53,15 @@ export default function App() {
 
   function handleFileChange(event) {
     const selected = event.target.files?.[0] ?? null;
+    if (!selected) return;
     setStatus({ type: 'idle' });
-    if (selected && selected.type !== 'image/png') {
-      setFile(null);
+    if (selected.type !== 'image/png') {
       setStatus({ type: 'error', message: 'Please select a .png file.' });
       event.target.value = '';
       return;
     }
     setFile(selected);
+    setIsSample(false);
   }
 
   async function handleSubmit(event) {
@@ -54,8 +81,8 @@ export default function App() {
         throw new Error(result.error || `Request failed with status ${response.status}`);
       }
       setStatus({ type: 'success', runId: result.runId });
-      setFile(null);
-      if (inputRef.current) inputRef.current.value = '';
+      // Reset to the sample so the demo can be repeated straight away.
+      await selectSample();
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
     }
@@ -79,10 +106,31 @@ export default function App() {
           disabled={submitting}
         />
 
+        {sampleAvailable && (
+          <div className="hint">
+            {isSample ? (
+              <span>
+                Using the <strong>sample claim form</strong> ({SAMPLE_NAME}) by default. Choose a
+                file above to submit your own instead.
+              </span>
+            ) : (
+              <>
+                <span>No claim form handy?</span>
+                <button type="button" className="link-button" onClick={selectSample} disabled={submitting}>
+                  Use the sample claim form
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {file && previewUrl && (
           <figure className="preview">
             <img src={previewUrl} alt="Selected claim document preview" />
-            <figcaption>{file.name} ({(file.size / 1024).toFixed(1)} KB)</figcaption>
+            <figcaption>
+              {file.name} ({(file.size / 1024).toFixed(1)} KB)
+              {isSample && <span className="badge">Sample</span>}
+            </figcaption>
           </figure>
         )}
 
